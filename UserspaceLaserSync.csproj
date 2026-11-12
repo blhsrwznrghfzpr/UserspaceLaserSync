@@ -1,0 +1,17 @@
+<Project Sdk="Remora.Resonite.Sdk/2.3.4">
+  <PropertyGroup>
+    <ResoniteTarget>client</ResoniteTarget>
+    <ResoniteProjectType>mod</ResoniteProjectType>
+    <ResoniteTargetModLoader>BepisLoader</ResoniteTargetModLoader>
+    <Version>0.1.0</Version>
+    <Authors>blhsrwznrghfzpr</Authors>
+    <Description>Synchronizes userspace laser toggles with the focused world's lasers.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="RML/**/*.cs" />
+    <ResoniteReference Include="FrooxEngine" />
+    <ResoniteReference Include="Elements.Core" />
+    <ResoniteReference Include="Renderite.Shared" />
+  </ItemGroup>
+</Project>

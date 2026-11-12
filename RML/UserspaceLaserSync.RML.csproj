@@ -1,0 +1,25 @@
+<Project>
+  <Import Project="Sdk.props" Sdk="Remora.Resonite.Sdk" Version="2.3.4" />
+  <PropertyGroup>
+    <ResoniteTarget>client</ResoniteTarget>
+    <ResoniteProjectType>mod</ResoniteProjectType>
+    <ResoniteTargetModLoader>ResoniteModLoaderStandalone</ResoniteTargetModLoader>
+    <AssemblyName>UserspaceLaserSync</AssemblyName>
+    <RootNamespace>UserspaceLaserSync</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>blhsrwznrghfzpr</Authors>
+    <Description>Synchronizes userspace laser toggles with the focused world's lasers.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../LaserEnabledPatch.cs" Link="LaserEnabledPatch.cs" />
+    <ResoniteReference Include="FrooxEngine" />
+    <ResoniteReference Include="Elements.Core" />
+    <ResoniteReference Include="Renderite.Shared" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Remora.Resonite.Sdk" Version="2.3.4" />
+  <!-- The installed loader supplies RML and Harmony. Do not distribute copies. -->
+  <ItemGroup>
+    <PackageReference Update="ResoniteModLoader" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>
