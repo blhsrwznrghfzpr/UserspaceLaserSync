@@ -6,7 +6,7 @@
     <ResoniteTargetModLoader>ResoniteModLoaderStandalone</ResoniteTargetModLoader>
     <AssemblyName>UserspaceLaserSync</AssemblyName>
     <RootNamespace>UserspaceLaserSync</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>blhsrwznrghfzpr</Authors>
     <Description>Synchronizes userspace laser toggles with the focused world's lasers.</Description>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>

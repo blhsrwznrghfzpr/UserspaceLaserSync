@@ -8,6 +8,7 @@
 - 現在フォーカスしているワールドのローカルユーザーの状態を参照します。ワールド移動やアバター変更後は、その時点の状態に追従します。
 - 対応するワールドや手が見つからない間は、元の動作に戻ります。
 - レーザーを必要とするUserspace内のツール、およびコンテキストメニュー操作時の例外はResonite標準の動作を維持します。完全なレーザー非表示Modではありません。
+- Userspaceに常時装備される標準の `UserspacePointer` はツールの例外から除外し、通常ワールドのトグルに追従させます。
 - Userspace側の判定を通常ワールドのトグルに連動させます。Userspaceから通常ワールドへ逆方向に書き戻す機能はありません。
 - ダッシュの保存データや、他ユーザーのレーザー設定は変更しません。
 
@@ -51,8 +52,8 @@ dotnet publish RML/UserspaceLaserSync.RML.csproj -c Release
 
 | 対象 | 配布ZIP |
 | --- | --- |
-| BepisLoader | `bin/publish/UserspaceLaserSync-0.1.0-Release.zip` |
-| RML | `RML/bin/publish/UserspaceLaserSync.RML-0.1.0-Release.zip` |
+| BepisLoader | `bin/publish/UserspaceLaserSync-0.1.1-Release.zip` |
+| RML | `RML/bin/publish/UserspaceLaserSync.RML-0.1.1-Release.zip` |
 
 BepisLoader版DLL: `bin/Release/mod/client/BepInEx/plugins/UserspaceLaserSync/UserspaceLaserSync.dll`
 
@@ -72,6 +73,13 @@ RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 5. ツール使用時とコンテキストメニュー操作時の標準の例外が維持されること。
 6. デスクトップモードでもダッシュとキーボードが操作でき、VRとの切り替えで異常がないこと。
 7. `Enabled=false` で再起動すると元の動作に戻ること。
+8. 3DDashOnScreen併用のデスクトップモードで、操作する手の通常ワールドのレーザーをOFFにすると3Dダッシュへのレーザー操作が止まり、ONで復帰すること。コンテキストメニューを閉じて確認すること。
+
+## 変更履歴
+
+### 0.1.1
+
+- 標準の `UserspacePointer.UsesLaser` が常に `true` のため、通常ワールドのトグルがOFFでもUserspaceのレーザーが有効になっていた問題を修正しました。両ローダー共通の修正です。3DDashOnScreen併用環境からの報告をもとに修正していますが、ゲーム内での動作確認は別途必要です。
 
 ## 実装
 

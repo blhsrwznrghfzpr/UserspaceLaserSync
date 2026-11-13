@@ -40,7 +40,11 @@ internal static class LaserEnabledPatch
         // Read the actual menu toggle, not LaserEnabled: world tools can temporarily
         // require a laser even when the user's toggle is off. Keep the equivalent
         // exception for tools in userspace, just as the original getter does.
+        // Userspace always equips a UserspacePointer, whose UsesLaser is true.
+        // It is the default pointer we are synchronizing, not a tool override.
         // No Sync fields are written across worlds, and no dashboard state is saved.
-        __result = worldHandler._laserEnabled.Value || (__instance.ActiveTool?.UsesLaser ?? false);
+        var activeTool = __instance.ActiveTool;
+        __result = worldHandler._laserEnabled.Value ||
+            (activeTool is not UserspacePointer && (activeTool?.UsesLaser ?? false));
     }
 }
