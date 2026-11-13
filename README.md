@@ -96,66 +96,7 @@ RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 
 ## リリース・Thunderstore公開
 
-公開データの編集元:
-
-| ファイル | 編集する内容 |
-| --- | --- |
-| `Directory.Build.props` | リリースバージョン（唯一の定義元） |
-| `Thunderstore/package.json` | Team・Community・カテゴリ識別子・名前・説明・URL・依存Mod |
-| `Thunderstore/publish.toml.template` | TCLIの公開設定テンプレート（公開先URL・NSFW指定など） |
-| `Thunderstore/README.md` | ThunderstoreとGaleに表示するBepis版の説明 |
-| `CHANGELOG.md` | 新しいバージョンの変更履歴 |
-| `icon.png` | 共通アイコン（256×256 PNG） |
-
-`Thunderstore/package.json` はこのプロジェクトのビルド・公開スクリプト用の設定ファイルです。Thunderstoreに送信する `manifest.json` は、ここから公開用の項目だけを選び、共通バージョンを加えてZIP内に生成します。Galeのmanifestも同じ情報から生成するため、依存Modや説明を二重管理しません。Team・Community・カテゴリは公開先の指定であり、manifestには含めません。
-
-1. 次のリリースでは `Directory.Build.props` の `Version` を更新し、`CHANGELOG.md` に `## <Version>` の見出しと変更内容を追加します。必要に応じて公開用READMEも更新します。
-2. `powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1` を実行します。必須ファイル・UTF-8文書・PNG寸法・manifestの名前や説明・バージョン・依存指定の形式・変更履歴の見出し・Bepis DLLのバージョンを確認します。
-3. `artifacts/UserspaceLaserSync.Thunderstore-<Version>-Release.zip` を新しいGaleプロファイルに読み込み、ゲーム内で動作確認します。現時点での自動チェックは実機確認を代替しません。
-4. [Thunderstoreアップロード画面](https://thunderstore.io/package/create/)で、そのZIPと以下の公開先を選択します。
-
-- Team: `blhsrwznrghfzpr`
-- Community: `Resonite`
-- Categories: `Mods`、`Controls`、`Dashboard`、`AI Generated`
-
-ZIPの構成:
-
-```text
-manifest.json
-README.md
-CHANGELOG.md
-icon.png
-plugins/
-  UserspaceLaserSync/
-    UserspaceLaserSync.dll
-    UserspaceLaserSync.pdb
-```
-
-Thunderstore用ZIPは、このModのDLL/PDBと公開用文書・アイコンだけを含みます。BepisLoader本体や他ModのDLLは依存指定から導入します。BepisModSettingsはゲーム内設定UI用の任意ModとしてREADMEで案内しています。
-
-WebアップロードではTCLIやAPIトークンは不要です。`build.ps1` はZIP生成までを行います。[Thunderstoreのパッケージ仕様](https://wiki.thunderstore.io/mods/creating-a-package)と[Resoniteの公開ガイド](https://modding.resonite.net/creating-a-mod/packaging-and-publishing/)に沿った構成です。
-
-### コマンドからの公開
-
-初回のみ `dotnet tool install --global tcli` で[TCLI](https://github.com/thunderstore-io/thunderstore-cli)をインストールします。Thunderstoreの **Settings → Teams → blhsrwznrghfzpr → Service Accounts → Add service account** でAPIトークンを作成してください。
-
-```powershell
-# 生成済みRelease ZIPと公開先を確認（通信・トークン入力なし）
-powershell -NoProfile -ExecutionPolicy Bypass -File .\publish.ps1 -DryRun
-
-# 確認したZIPを実際に公開
-powershell -NoProfile -ExecutionPolicy Bypass -File .\publish.ps1
-```
-
-`publish.ps1` は既存のThunderstore用Release ZIPを使用します。ZIPの必須エントリ・バージョン・パッケージ情報を検査し、公開先とSHA256を表示します。DLLやREADMEの内容がソースと同じかは検査しないため、変更後は `build.ps1` で作り直し、そのZIPをゲーム内で確認してください。
-
-`-Build` を付けると最初に `build.ps1` を実行します。`-Build -DryRun` はビルドと公開内容の確認まで行い、アップロードしません。`-Build` 単独ではビルド成功後にそのまま公開します。
-
-Team・Mod名・バージョン・Community・カテゴリは既存の設定から取得し、`artifacts/thunderstore.publish.toml` を生成します。テンプレートをTCLIへ直接渡さず、スクリプトを使ってください。`package.json` のカテゴリには表示名ではなく `mods`、`controls`、`dashboard`、`ai-generated` のような識別子を指定します。バージョンや依存Modの二重管理は不要です。
-
-認証には環境変数 `TCLI_AUTH_TOKEN` を使用し、未設定なら非表示入力を求めます。入力したトークンはファイルに保存せず、終了時に実行前の環境変数へ戻します。CIではシークレットから環境変数を設定して `-NonInteractive` を指定してください。トークン未設定なら入力待ちにせず失敗します。トークンはGitへコミットしないでください。
-
-同じTeam・Mod名・バージョンを再アップロードして上書きすることはできません。公開済みなら `Directory.Build.props` のバージョンを上げ、変更履歴を追加して再ビルドします。[TCLIの認証・公開手順](https://github.com/thunderstore-io/thunderstore-cli/wiki#authentication)、[Thunderstoreの更新手順](https://wiki.thunderstore.io/mods/updating-a-package)も参照してください。
+初回設定、ビルド・動作確認、Web／コマンドからの公開、更新時の手順は [Thunderstoreへのリリース手順](Thunderstore/RELEASING.md) を参照してください。
 
 ## 回帰チェック
 
@@ -186,6 +127,7 @@ UserspaceLaserSync/
 │  ├─ Program.cs
 │  └─ UserspaceLaserSync.Tests.csproj
 ├─ Thunderstore/
+│  ├─ RELEASING.md             # Thunderstoreへのリリース手順
 │  ├─ package.json             # 公開先とパッケージ情報
 │  ├─ publish.toml.template    # TCLI公開設定のテンプレート
 │  └─ README.md                # Bepis版の公開ページ
