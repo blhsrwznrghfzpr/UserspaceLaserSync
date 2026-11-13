@@ -53,7 +53,7 @@ RML設定の `Enabled` は既定で `true` です。ResoniteModSettingsなどか
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-共通処理の回帰チェックを実行してから、BepisLoader版とRML版を順にビルド・publishします。失敗するとそこで停止します。既定は `Release` で、両版の配布ZIPを `artifacts/` にまとめます。ゲームへの自動コピーは行いません。
+公開データを検査し、共通処理の回帰チェックを実行してから、BepisLoader版とRML版を順にビルド・publishします。失敗するとそこで停止します。既定は `Release` で、手動配置用・Gale用・Thunderstore用の配布ZIPを `artifacts/` にまとめます。ゲームへの自動コピーや公開は行いません。
 
 両版とテストプロジェクトのビルドだけを行う場合は、ソリューションを指定します。このコマンドは回帰チェックの実行やZIP生成は行いません。
 
@@ -81,9 +81,10 @@ dotnet publish RML/UserspaceLaserSync.RML.csproj -c Release
 | --- | --- |
 | BepisLoader | `artifacts/UserspaceLaserSync.Bepis-<Version>-Release.zip` |
 | Gale（BepisLoader） | `artifacts/UserspaceLaserSync.Gale-<Version>-Release.zip` |
+| Thunderstore（BepisLoader） | `artifacts/UserspaceLaserSync.Thunderstore-<Version>-Release.zip` |
 | RML | `artifacts/UserspaceLaserSync.RML-<Version>-Release.zip` |
 
-上記は `build.ps1` の出力先です。個別の `dotnet publish` では各ローダーフォルダの `bin/publish/` に手動配置用ZIPを生成します。Gale用ZIPは `build.ps1` で生成します。
+上記は `build.ps1` の出力先です。個別の `dotnet publish` では各ローダーフォルダの `bin/publish/` に手動配置用ZIPを生成します。Gale用・Thunderstore用ZIPは `build.ps1` で生成します。
 
 `<Version>` は `Directory.Build.props` の `Version` です。リリース時のバージョン変更はこの1か所で行います。両版のアセンブリ・配布ZIPに加え、BepisLoaderのプラグイン属性はSDKが生成する `PluginMetadata.VERSION`、RMLの表示バージョンはアセンブリのバージョンから取得します。
 
@@ -92,6 +93,46 @@ BepisLoader版DLL: `Bepis/bin/Release/mod/client/BepInEx/plugins/UserspaceLaserS
 RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 
 通常のビルドではゲームへの自動コピーを行いません。ローカル導入先を指定する場合は、対象プロジェクトのビルドに `-p:ResoniteInstallOnBuild=true -p:ResonitePath="D:\Path\To\Resonite"` を追加します。
+
+## リリース・Thunderstore公開
+
+公開データの編集元:
+
+| ファイル | 編集する内容 |
+| --- | --- |
+| `Directory.Build.props` | リリースバージョン（唯一の定義元） |
+| `Thunderstore/package.json` | Team・Community・カテゴリ・名前・説明・URL・依存Mod |
+| `Thunderstore/README.md` | ThunderstoreとGaleに表示するBepis版の説明 |
+| `CHANGELOG.md` | 新しいバージョンの変更履歴 |
+| `icon.png` | 共通アイコン（256×256 PNG） |
+
+`Thunderstore/package.json` はこのビルドスクリプト専用の設定ファイルです。Thunderstoreに送信する `manifest.json` は、ここから公開用の項目だけを選び、共通バージョンを加えてZIP内に生成します。Galeのmanifestも同じ情報から生成するため、依存Modや説明を二重管理しません。Team・Community・カテゴリはWebアップロード時の選択内容であり、manifestには含めません。
+
+1. 次のリリースでは `Directory.Build.props` の `Version` を更新し、`CHANGELOG.md` に `## <Version>` の見出しと変更内容を追加します。必要に応じて公開用READMEも更新します。
+2. `powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1` を実行します。必須ファイル・UTF-8文書・PNG寸法・manifestの名前や説明・バージョン・依存指定の形式・変更履歴の見出し・Bepis DLLのバージョンを確認します。
+3. `artifacts/UserspaceLaserSync.Thunderstore-<Version>-Release.zip` を新しいGaleプロファイルに読み込み、ゲーム内で動作確認します。現時点での自動チェックは実機確認を代替しません。
+4. [Thunderstoreアップロード画面](https://thunderstore.io/package/create/)で、そのZIPと以下の公開先を選択します。
+
+- Team: `blhsrwznrghfzpr`
+- Community: `Resonite`
+- Categories: `Mods`、`Controls`、`Dashboard`、`AI Generated`
+
+ZIPの構成:
+
+```text
+manifest.json
+README.md
+CHANGELOG.md
+icon.png
+plugins/
+  UserspaceLaserSync/
+    UserspaceLaserSync.dll
+    UserspaceLaserSync.pdb
+```
+
+Thunderstore用ZIPは、このModのDLL/PDBと公開用文書・アイコンだけを含みます。BepisLoader本体や他ModのDLLは依存指定から導入します。BepisModSettingsはゲーム内設定UI用の任意ModとしてREADMEで案内しています。
+
+WebアップロードではTCLIやAPIトークンは不要です。このスクリプトはZIP生成までを行います。[Thunderstoreのパッケージ仕様](https://wiki.thunderstore.io/mods/creating-a-package)と[Resoniteの公開ガイド](https://modding.resonite.net/creating-a-mod/packaging-and-publishing/)に沿った構成です。
 
 ## 回帰チェック
 
@@ -121,6 +162,10 @@ UserspaceLaserSync/
 │  ├─ EngineDouble.cs
 │  ├─ Program.cs
 │  └─ UserspaceLaserSync.Tests.csproj
+├─ Thunderstore/
+│  ├─ package.json             # 公開先とパッケージ情報
+│  └─ README.md                # Bepis版の公開ページ
+├─ CHANGELOG.md
 ├─ artifacts/                  # build.ps1の配布ZIP（Git管理外）
 ├─ Directory.Build.props      # バージョンと共通設定
 ├─ Directory.Build.targets    # 両版にShared/*.csを取り込む
@@ -146,21 +191,7 @@ UserspaceLaserSync/
 
 ## 変更履歴
 
-### 1.0.0
-
-- BepisLoader版・ResoniteModLoader版の初回正式リリース。
-- 通常ワールドの左右のレーザートグルとUserspaceのレーザーを連動させます。
-- `Enabled` 設定は即時反映され、OFF時はResonite標準の判定を使います。
-- アイコン付きGale用ZIPの生成をビルドスクリプトに追加しました。バージョンは共通設定から取得します。
-
-### 0.1.2
-
-- 両ローダーの `Enabled` 設定変更をイベントで共通処理へ反映するよう整理しました。無効時は元のgetterの結果を変更せず、有効化し直すと最新のワールドのトグルへ追従します。
-- Harmony / HarmonyXでのON→OFF→ONと、無効時のパッチ前後の結果一致を検証する回帰チェックを追加しました。
-
-### 0.1.1
-
-- 標準の `UserspacePointer.UsesLaser` が常に `true` のため、通常ワールドのトグルがOFFでもUserspaceのレーザーが有効になっていた問題を修正しました。両ローダー共通の修正です。3DDashOnScreen併用環境からの報告をもとに修正していますが、ゲーム内での動作確認は別途必要です。
+[CHANGELOG.md](CHANGELOG.md) にまとめています。Thunderstore用・Gale用ZIPにも同じファイルを含めます。
 
 ## 実装
 
