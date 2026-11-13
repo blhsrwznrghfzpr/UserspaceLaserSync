@@ -23,6 +23,8 @@ BepisLoader版とRML版があります。利用するローダーに合う版を
 
 BepisLoaderを導入した環境で、配布ZIP内の `BepInEx/plugins/UserspaceLaserSync/` をResoniteまたはModプロファイルの同じ場所に展開して起動します。
 
+Galeで管理する場合は、`UserspaceLaserSync.Gale-<Version>-Release.zip` をローカルModとしてインポートします。Bepis版のDLLに加えて、名前・バージョン・依存Modを記載した `manifest.json`、アイコン、READMEを含みます。手動配置用のBepis版ZIPとGale用ZIPは同じModなので、導入方法に合う一方を使用してください。
+
 ゲーム内で変更するには、BepisModSettingsを導入・有効化して、`UserspaceLaserSync` → `General` → `Enabled` を切り替えます。設定変更は即時反映され、再起動は不要です。OFFはレーザーの強制無効化ではなく、Modなしと同じ標準の判定へ戻す設定です。
 
 設定ファイルは起動後に `BepInEx/config/dev.blhsrwznrghfzpr.UserspaceLaserSync.cfg` に生成されます。`[General]` の `Enabled` は既定で `true` です。ファイルを直接編集する場合はResoniteを終了してから編集し、再起動してください。
@@ -78,9 +80,10 @@ dotnet publish RML/UserspaceLaserSync.RML.csproj -c Release
 | 対象 | 配布ZIP |
 | --- | --- |
 | BepisLoader | `artifacts/UserspaceLaserSync.Bepis-<Version>-Release.zip` |
+| Gale（BepisLoader） | `artifacts/UserspaceLaserSync.Gale-<Version>-Release.zip` |
 | RML | `artifacts/UserspaceLaserSync.RML-<Version>-Release.zip` |
 
-上記は `build.ps1` の出力先です。個別の `dotnet publish` では各ローダーフォルダの `bin/publish/` にZIPを生成します。
+上記は `build.ps1` の出力先です。個別の `dotnet publish` では各ローダーフォルダの `bin/publish/` に手動配置用ZIPを生成します。Gale用ZIPは `build.ps1` で生成します。
 
 `<Version>` は `Directory.Build.props` の `Version` です。リリース時のバージョン変更はこの1か所で行います。両版のアセンブリ・配布ZIPに加え、BepisLoaderのプラグイン属性はSDKが生成する `PluginMetadata.VERSION`、RMLの表示バージョンはアセンブリのバージョンから取得します。
 
@@ -142,6 +145,13 @@ UserspaceLaserSync/
 8. 3DDashOnScreen併用のデスクトップモードで、操作する手の通常ワールドのレーザーをOFFにすると3Dダッシュへのレーザー操作が止まり、ONで復帰すること。コンテキストメニューを閉じて確認すること。
 
 ## 変更履歴
+
+### 1.0.0
+
+- BepisLoader版・ResoniteModLoader版の初回正式リリース。
+- 通常ワールドの左右のレーザートグルとUserspaceのレーザーを連動させます。
+- `Enabled` 設定は即時反映され、OFF時はResonite標準の判定を使います。
+- アイコン付きGale用ZIPの生成をビルドスクリプトに追加しました。バージョンは共通設定から取得します。
 
 ### 0.1.2
 
