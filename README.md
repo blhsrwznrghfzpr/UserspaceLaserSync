@@ -36,6 +36,22 @@ RML設定の `Enabled` は既定で `true` です。ResoniteModSettingsなどか
 
 .NET 10 SDKと [Remora.Resonite.Sdk 2.3.4](https://www.nuget.org/packages/Remora.Resonite.Sdk/2.3.4) を使用します。SDK同梱の参照アセンブリはResonite `2026.8.27.1094` 向けです。以下はプロジェクトのルートディレクトリで実行します。
 
+両ローダー版の検証・配布物作成:
+
+```powershell
+.\build.ps1
+```
+
+署名なしスクリプトの実行が制限されている環境では、今回のプロセスだけで許可して実行できます。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+共通処理の回帰チェックを実行してから、BepisLoader版とRML版を順にビルド・publishします。失敗するとそこで停止します。既定は `Release` で、両版の配布ZIPを生成します。ゲームへの自動コピーは行いません。
+
+個別にビルドする場合は、以下のプロジェクトを指定します。ルートでの `dotnet build` はBepisLoader版だけを対象にします。
+
 BepisLoader版:
 
 ```powershell
@@ -52,8 +68,10 @@ dotnet publish RML/UserspaceLaserSync.RML.csproj -c Release
 
 | 対象 | 配布ZIP |
 | --- | --- |
-| BepisLoader | `bin/publish/UserspaceLaserSync-0.1.1-Release.zip` |
-| RML | `RML/bin/publish/UserspaceLaserSync.RML-0.1.1-Release.zip` |
+| BepisLoader | `bin/publish/UserspaceLaserSync-<Version>-Release.zip` |
+| RML | `RML/bin/publish/UserspaceLaserSync.RML-<Version>-Release.zip` |
+
+`<Version>` は `Directory.Build.props` の `Version` です。リリース時のバージョン変更はこの1か所で行います。両版のアセンブリ・配布ZIPに加え、BepisLoaderのプラグイン属性はSDKが生成する `PluginMetadata.VERSION`、RMLの表示バージョンはアセンブリのバージョンから取得します。
 
 BepisLoader版DLL: `bin/Release/mod/client/BepInEx/plugins/UserspaceLaserSync/UserspaceLaserSync.dll`
 
@@ -61,6 +79,24 @@ RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 
 通常のビルドではゲームへの自動コピーを行いません。ローカル導入先を指定する場合は、対象プロジェクトのビルドに `-p:ResoniteInstallOnBuild=true -p:ResonitePath="D:\Path\To\Resonite"` を追加します。
 
+## 回帰チェック
+
+```powershell
+dotnet run --project tests/UserspaceLaserSync.Regression/UserspaceLaserSync.Regression.csproj -c Release
+```
+
+本体の `LaserEnabledPatch.cs` を直接コンパイルし、エンジン・ローダーの最小限の代替実装を使って15項目を確認します。標準ポインターのOFF/ON、左右独立、ツールの例外、Mod無効化、対象外ユーザーやワールドでの元の判定の維持などを対象とします。失敗時は非ゼロの終了コードを返します。テスト用コードは両ローダー版のDLLには含まれません。
+
+これは判定ロジックのチェックであり、実際のHarmonyパッチ適用、Resonite APIとの実行時互換性、3DDashOnScreen併用時の動作は下記の実機確認が必要です。
+
+## プロジェクト構成
+
+- `LaserEnabledPatch.cs`: 両ローダー版で共有するレーザー判定。
+- `Plugin.cs` / `UserspaceLaserSync.csproj`: BepisLoader用の起動・設定処理とビルド。
+- `RML/`: ResoniteModLoader用の起動・設定処理とビルド。
+- `Directory.Build.props`: バージョンと共通のビルド情報。
+- `tests/UserspaceLaserSync.Regression/`: 共通パッチの回帰チェック。
+- `build.ps1`: 回帰チェックと両版の配布物作成。
 
 ## 実機確認項目
 

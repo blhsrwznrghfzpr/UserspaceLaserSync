@@ -10,7 +10,7 @@ public sealed class Plugin : BasePlugin
 {
     public const string PluginGuid = "dev.blhsrwznrghfzpr.UserspaceLaserSync";
     public const string PluginName = "UserspaceLaserSync";
-    public const string PluginVersion = "0.1.1";
+    public const string PluginVersion = PluginMetadata.VERSION;
 
     private Harmony? _harmony;
     private static ConfigEntry<bool>? SyncEnabled { get; set; }
