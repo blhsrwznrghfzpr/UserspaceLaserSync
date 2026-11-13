@@ -26,6 +26,10 @@ try {
         'run', '--project', 'Tests/UserspaceLaserSync.Tests.csproj',
         '--configuration', $Configuration
     )
+    Invoke-DotNet -Arguments @(
+        'run', '--project', 'Tests/UserspaceLaserSync.Tests.csproj',
+        '--configuration', $Configuration, '-p:UseHarmonyX=true'
+    )
 
     New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
     foreach ($loader in @('Bepis', 'RML')) {

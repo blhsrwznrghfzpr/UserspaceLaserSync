@@ -10,10 +10,11 @@ public sealed class Mod : ResoniteMod
     [AutoRegisterConfigKey]
     private static readonly ModConfigurationKey<bool> Enabled = new(
         "Enabled",
-        "Make each userspace laser follow the same hand's laser toggle in the focused world.",
+        "Enable userspace laser synchronization. Changes apply immediately. " +
+        "When disabled, Resonite's original laser behavior is preserved.",
         () => true);
 
-    private static ModConfiguration? _configuration;
+    private ModConfiguration? _configuration;
 
     public override string Name => "UserspaceLaserSync";
     public override string Author => "blhsrwznrghfzpr";
@@ -22,7 +23,9 @@ public sealed class Mod : ResoniteMod
     public override void OnEngineInit()
     {
         _configuration = GetConfiguration();
-        LaserSyncRuntime.ReadEnabled = () => _configuration?.GetValue(Enabled) == true;
+        if (_configuration != null)
+            _configuration.OnThisConfigurationChanged += OnConfigurationChanged;
+        LaserSyncRuntime.SetEnabled(_configuration?.GetValue(Enabled) == true);
         var harmony = new Harmony(HarmonyId);
         try
         {
@@ -31,10 +34,18 @@ public sealed class Mod : ResoniteMod
         catch
         {
             harmony.UnpatchAll(HarmonyId);
+            if (_configuration != null)
+                _configuration.OnThisConfigurationChanged -= OnConfigurationChanged;
+            LaserSyncRuntime.SetEnabled(false);
             _configuration = null;
-            LaserSyncRuntime.ReadEnabled = null;
             throw;
         }
-        Msg("UserspaceLaserSync loaded. Userspace lasers follow the focused world's laser toggles.");
+        Msg($"UserspaceLaserSync loaded. Enabled: {LaserSyncRuntime.IsSyncEnabled}.");
+    }
+
+    private void OnConfigurationChanged(ConfigurationChangedEvent change)
+    {
+        if (change.Key == Enabled)
+            LaserSyncRuntime.SetEnabled(_configuration?.GetValue(Enabled) == true);
     }
 }

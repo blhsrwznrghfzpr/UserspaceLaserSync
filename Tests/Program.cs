@@ -1,4 +1,5 @@
 using System.Reflection;
+using HarmonyLib;
 using FrooxEngine;
 using Renderite.Shared;
 using UserspaceLaserSync;
@@ -7,8 +8,7 @@ using UserspaceLaserSync;
 // or loader is required. A failed assertion exits this executable with an error.
 var postfix = typeof(LaserEnabledPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static)!;
 var count = 0;
-var enabled = true;
-LaserSyncRuntime.ReadEnabled = () => enabled;
+LaserSyncRuntime.SetEnabled(true);
 void Check(string name, bool expected, InteractionHandler handler, bool original = true)
 {
     object[] args = [handler, original];
@@ -50,10 +50,10 @@ Check("no tool follows OFF", false, pointer);
 pointer.ActiveTool = new UserspacePointer();
 left.ActiveTool = new LaserTool();
 Check("world tool does not override raw toggle", false, pointer);
-enabled = false;
+LaserSyncRuntime.SetEnabled(false);
 Check("disabled mod preserves true", true, pointer);
 Check("disabled mod preserves false", false, pointer, false);
-enabled = true;
+LaserSyncRuntime.SetEnabled(true);
 Check("normal world untouched", true, left);
 pointer.IsUnderLocalUser = false;
 Check("remote user untouched", true, pointer);
@@ -68,4 +68,61 @@ world.LocalUser.Root.Handlers = [right];
 Check("missing matching hand falls back", true, pointer);
 engine.WorldManager.FocusedWorld = userspace;
 Check("userspace focus falls back", true, pointer);
+// Capture the real unpatched getter's result before installing the production
+// Harmony patch. Compare it after ON -> OFF for each combination, including
+// userspace's own toggle and the default pointer's unconditional UsesLaser.
+engine.WorldManager.FocusedWorld = world;
+world.LocalUser.Root.Handlers = [left, right];
+var cases = new List<(InteractionHandler Handler, bool WorldToggle, bool NativeResult)>();
+foreach (var side in new[] { Chirality.Left, Chirality.Right })
+foreach (var worldToggle in new[] { false, true })
+foreach (var userspaceToggle in new[] { false, true })
+foreach (var tool in new ITool?[] { null, new UserspacePointer(), new LaserTool(), new NonLaserTool() })
+{
+    var handler = Handler(userspace, side, userspaceToggle);
+    handler.ActiveTool = tool;
+    cases.Add((handler, worldToggle, handler.LaserEnabled));
+}
+
+void AssertResult(string name, bool expected, bool actual)
+{
+    if (actual != expected)
+        throw new Exception($"FAIL: {name}: expected {expected}, got {actual}");
+    count++;
+}
+
+const string harmonyId = "UserspaceLaserSync.Tests";
+var harmony = new Harmony(harmonyId);
+try
+{
+    harmony.PatchAll(typeof(LaserEnabledPatch).Assembly);
+    foreach (var test in cases)
+    {
+        var handler = test.Handler;
+        var worldHandler = handler.Side.Value == Chirality.Left ? left : right;
+        var userspaceToggle = handler._laserEnabled.Value;
+        worldHandler._laserEnabled.Value = test.WorldToggle;
+        var toolOverride = handler.ActiveTool is not UserspacePointer &&
+            (handler.ActiveTool?.UsesLaser ?? false);
+
+        LaserSyncRuntime.SetEnabled(true);
+        AssertResult("enabled synchronization", test.WorldToggle || toolOverride, handler.LaserEnabled);
+        LaserSyncRuntime.SetEnabled(false);
+        AssertResult("disabled matches unpatched getter", test.NativeResult, handler.LaserEnabled);
+        AssertResult("userspace toggle is not mutated", userspaceToggle, handler._laserEnabled.Value);
+        AssertResult("world toggle is not mutated", test.WorldToggle, worldHandler._laserEnabled.Value);
+
+        worldHandler._laserEnabled.Value = !test.WorldToggle;
+        LaserSyncRuntime.SetEnabled(true);
+        AssertResult("re-enabled follows latest world toggle", !test.WorldToggle || toolOverride, handler.LaserEnabled);
+    }
+    Console.WriteLine($"PASS: native getter comparison and live ON/OFF/ON for {cases.Count} combinations");
+}
+finally
+{
+    LaserSyncRuntime.SetEnabled(false);
+    // Shared by Harmony and HarmonyX.
+    harmony.Unpatch(AccessTools.PropertyGetter(typeof(InteractionHandler), nameof(InteractionHandler.LaserEnabled)),
+        HarmonyPatchType.All, harmonyId);
+}
 Console.WriteLine($"{count} regression checks passed.");

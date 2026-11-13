@@ -13,13 +13,15 @@ public sealed class Plugin : BasePlugin
     public const string PluginVersion = PluginMetadata.VERSION;
 
     private Harmony? _harmony;
-    private static ConfigEntry<bool>? SyncEnabled { get; set; }
+    private ConfigEntry<bool>? _enabled;
 
     public override void Load()
     {
-        SyncEnabled = Config.Bind("General", "Enabled", true,
-            "Make each userspace laser follow the same hand's laser toggle in the focused world.");
-        LaserSyncRuntime.ReadEnabled = () => SyncEnabled?.Value == true;
+        _enabled = Config.Bind("General", "Enabled", true,
+            "Enable userspace laser synchronization. Changes apply immediately. " +
+            "When disabled, Resonite's original laser behavior is preserved.");
+        _enabled.SettingChanged += OnEnabledChanged;
+        LaserSyncRuntime.SetEnabled(_enabled.Value);
         _harmony = new Harmony(PluginGuid);
         try
         {
@@ -28,18 +30,24 @@ public sealed class Plugin : BasePlugin
         catch
         {
             _harmony.UnpatchSelf();
-            LaserSyncRuntime.ReadEnabled = null;
-            SyncEnabled = null;
+            _enabled.SettingChanged -= OnEnabledChanged;
+            LaserSyncRuntime.SetEnabled(false);
+            _enabled = null;
             throw;
         }
-        Log.LogInfo("UserspaceLaserSync loaded. Userspace lasers follow the focused world's laser toggles.");
+        Log.LogInfo($"UserspaceLaserSync loaded. Enabled: {_enabled.Value}.");
     }
+
+    private void OnEnabledChanged(object? sender, EventArgs args) =>
+        LaserSyncRuntime.SetEnabled(_enabled?.Value == true);
 
     public override bool Unload()
     {
+        if (_enabled != null)
+            _enabled.SettingChanged -= OnEnabledChanged;
+        LaserSyncRuntime.SetEnabled(false);
         _harmony?.UnpatchSelf();
-        SyncEnabled = null;
-        LaserSyncRuntime.ReadEnabled = null;
+        _enabled = null;
         return true;
     }
 }

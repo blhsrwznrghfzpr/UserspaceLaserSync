@@ -16,7 +16,12 @@ internal static class LaserEnabledPatch
     [HarmonyPostfix]
     private static void Postfix(InteractionHandler __instance, ref bool __result)
     {
-        if (!LaserSyncRuntime.IsSyncEnabled || __instance.IsRemoved ||
+        // Disabled means the original getter's result is left untouched, including
+        // its tool exceptions. No world or userspace toggle is written or restored.
+        if (!LaserSyncRuntime.IsSyncEnabled)
+            return;
+
+        if (__instance.IsRemoved ||
             !__instance.IsUnderLocalUser || __instance.World != Userspace.UserspaceWorld)
             return;
 

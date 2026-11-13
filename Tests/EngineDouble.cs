@@ -1,24 +1,11 @@
 using Renderite.Shared;
+using System.Runtime.CompilerServices;
 
 // Minimal stand-ins for the dependencies of the linked production patch.
-// These checks exercise its decisions, not Harmony installation or engine behavior.
+// Harmony patches this double's getter. Resonite itself is not loaded here.
 namespace Renderite.Shared
 {
     enum Chirality { Left, Right }
-}
-
-namespace HarmonyLib
-{
-    enum MethodType { Getter }
-
-    [AttributeUsage(AttributeTargets.Class)]
-    sealed class HarmonyPatch : Attribute
-    {
-        public HarmonyPatch(Type type, string name, MethodType method) { }
-    }
-
-    [AttributeUsage(AttributeTargets.Method)]
-    sealed class HarmonyPostfix : Attribute { }
 }
 
 namespace FrooxEngine
@@ -41,7 +28,11 @@ namespace FrooxEngine
         public Sync<Chirality> Side = new();
         public Sync<bool> _laserEnabled = new();
         public ITool? ActiveTool;
-        public bool LaserEnabled => _laserEnabled.Value || (ActiveTool?.UsesLaser ?? false);
+        public bool LaserEnabled
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            get => _laserEnabled.Value || (ActiveTool?.UsesLaser ?? false);
+        }
     }
 
     static class Userspace { public static World UserspaceWorld = null!; }

@@ -10,5 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../Shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.2" Condition="'$(UseHarmonyX)' != 'true'" />
+    <PackageReference Include="HarmonyX" Version="2.16.0" Condition="'$(UseHarmonyX)' == 'true'" />
   </ItemGroup>
 </Project>

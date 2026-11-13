@@ -2,8 +2,11 @@ namespace UserspaceLaserSync;
 
 internal static class LaserSyncRuntime
 {
-    // Each loader supplies its live configuration reader without exposing its
-    // entry-point type to the shared patch.
-    internal static Func<bool>? ReadEnabled { get; set; }
-    internal static bool IsSyncEnabled => ReadEnabled?.Invoke() == true;
+    // Configuration callbacks can run outside the world update thread.
+    // Keep the getter independent of either loader's configuration API.
+    private static volatile bool _enabled;
+
+    internal static bool IsSyncEnabled => _enabled;
+
+    internal static void SetEnabled(bool enabled) => _enabled = enabled;
 }

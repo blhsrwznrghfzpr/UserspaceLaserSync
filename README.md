@@ -11,6 +11,7 @@
 - Userspaceに常時装備される標準の `UserspacePointer` はツールの例外から除外し、通常ワールドのトグルに追従させます。
 - Userspace側の判定を通常ワールドのトグルに連動させます。Userspaceから通常ワールドへ逆方向に書き戻す機能はありません。
 - ダッシュの保存データや、他ユーザーのレーザー設定は変更しません。
+- `Enabled` は既定でONです。設定UIでOFFにすると即時に同期を停止し、Resonite標準のレーザー判定をそのまま使います。再びONにすると、その時点の通常ワールドのトグルに追従します。切り替え時にどちらの空間のトグルも書き換えません。
 
 Resoniteでの空間名は[Userspace](https://wiki.resonite.com/Userspace)です。[FacetとFacet Anchors](https://wiki.resonite.com/Facets)もこの空間に存在します。
 
@@ -22,13 +23,15 @@ BepisLoader版とRML版があります。利用するローダーに合う版を
 
 BepisLoaderを導入した環境で、配布ZIP内の `BepInEx/plugins/UserspaceLaserSync/` をResoniteまたはModプロファイルの同じ場所に展開して起動します。
 
-設定ファイルは起動後に `BepInEx/config/dev.blhsrwznrghfzpr.UserspaceLaserSync.cfg` に生成されます。`[General]` の `Enabled` は既定で `true` です。`false` にして再起動すると標準の動作になります。
+ゲーム内で変更するには、BepisModSettingsを導入・有効化して、`UserspaceLaserSync` → `General` → `Enabled` を切り替えます。設定変更は即時反映され、再起動は不要です。OFFはレーザーの強制無効化ではなく、Modなしと同じ標準の判定へ戻す設定です。
+
+設定ファイルは起動後に `BepInEx/config/dev.blhsrwznrghfzpr.UserspaceLaserSync.cfg` に生成されます。`[General]` の `Enabled` は既定で `true` です。ファイルを直接編集する場合はResoniteを終了してから編集し、再起動してください。
 
 ### RML版
 
 ResoniteModLoader 5.0.1向けです。RMLとその指定するHarmonyを導入済みの環境で、配布ZIP内の `rml_mods/UserspaceLaserSync.dll` をResoniteまたはModプロファイルの `rml_mods` に配置して起動します。ZIPにRML本体やHarmonyは含みません。
 
-RML設定の `Enabled` は既定で `true` です。ResoniteModSettingsなどから変更できます。通常のRMLでは設定の保存先は `rml_config/UserspaceLaserSync.json` です。設定ファイルを直接編集する場合はResoniteを終了してから編集し、再起動してください。
+RML設定の `Enabled` は既定で `true` です。ResoniteModSettingsなどから変更でき、設定UIでの切り替えは再起動なしで即時反映されます。OFFの間はResonite標準のレーザー判定を使います。通常のRMLでは設定の保存先は `rml_config/UserspaceLaserSync.json` です。設定ファイルを直接編集する場合はResoniteを終了してから編集し、再起動してください。
 
 この版は `ResoniteModLoaderStandalone` を対象にビルドします。MonkeyLoaderのRML互換機能での動作は未検証です。
 
@@ -91,11 +94,12 @@ RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 
 ```powershell
 dotnet run --project Tests/UserspaceLaserSync.Tests.csproj -c Release
+dotnet run --project Tests/UserspaceLaserSync.Tests.csproj -c Release -p:UseHarmonyX=true
 ```
 
-本体の `Shared/*.cs` を直接コンパイルし、`Tests/EngineDouble.cs` のエンジン・ローダーの最小限の代替実装を使って15項目を確認します。標準ポインターのOFF/ON、左右独立、ツールの例外、Mod無効化、対象外ユーザーやワールドでの元の判定の維持などを対象とします。失敗時は非ゼロの終了コードを返します。テスト用コードは両ローダー版のDLLには含まれません。
+本体の `Shared/*.cs` を直接コンパイルし、`Tests/EngineDouble.cs` のエンジン代替実装を使って確認します。HarmonyとHarmonyXの両方で、実際のパッチを適用したgetterを検証します。左右・両空間のトグル・ツールの32通りについて、ON→OFFでパッチ前と同じ結果に戻ること、トグル値を書き換えないこと、再ONで最新の値に追従することを確認します。既存の対象範囲チェックと合わせて各175項目を実行し、失敗時は非ゼロの終了コードを返します。テスト用コードは両ローダー版のDLLには含まれません。`build.ps1` も両方のチェックを実行します。
 
-これは判定ロジックのチェックであり、実際のHarmonyパッチ適用、Resonite APIとの実行時互換性、3DDashOnScreen併用時の動作は下記の実機確認が必要です。
+これはエンジン代替実装でのチェックです。各ローダーの設定UIとの連携、Resonite APIとの実行時互換性、3DDashOnScreen併用時の動作は下記の実機確認が必要です。
 
 ## プロジェクト構成
 
@@ -122,7 +126,7 @@ UserspaceLaserSync/
 └─ build.ps1
 ```
 
-`Bepis/Plugin.cs` と `RML/Mod.cs` が各ローダーの起動・設定処理を担当します。`Shared/LaserSyncRuntime.cs` を通じて現在の設定を読み、共通パッチがローダーの入口クラスに依存しない構成にしています。
+`Bepis/Plugin.cs` と `RML/Mod.cs` が各ローダーの起動・設定処理を担当します。起動時と設定変更時に `Shared/LaserSyncRuntime.cs` の有効状態を更新し、共通パッチがローダーの入口クラスに依存しない構成にしています。
 
 ## 実機確認項目
 
@@ -134,10 +138,15 @@ UserspaceLaserSync/
 4. ワールド切り替え・退出・アバター変更後に、その時点のワールドのトグル状態へ追従すること。
 5. ツール使用時とコンテキストメニュー操作時の標準の例外が維持されること。
 6. デスクトップモードでもダッシュとキーボードが操作でき、VRとの切り替えで異常がないこと。
-7. `Enabled=false` で再起動すると元の動作に戻ること。
+7. 通常ワールドのレーザーをOFFにした状態で、設定UIの `Enabled` をOFFにすると標準のUserspaceレーザー操作に戻り、再ONで同期が再開すること。両ローダーで再起動なしに確認すること。`Enabled=false` を保存して再起動した場合も標準の動作になること。
 8. 3DDashOnScreen併用のデスクトップモードで、操作する手の通常ワールドのレーザーをOFFにすると3Dダッシュへのレーザー操作が止まり、ONで復帰すること。コンテキストメニューを閉じて確認すること。
 
 ## 変更履歴
+
+### 0.1.2
+
+- 両ローダーの `Enabled` 設定変更をイベントで共通処理へ反映するよう整理しました。無効時は元のgetterの結果を変更せず、有効化し直すと最新のワールドのトグルへ追従します。
+- Harmony / HarmonyXでのON→OFF→ONと、無効時のパッチ前後の結果一致を検証する回帰チェックを追加しました。
 
 ### 0.1.1
 
