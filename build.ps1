@@ -5,6 +5,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$artifactDirectory = Join-Path $PSScriptRoot 'artifacts'
+[xml]$buildProperties = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Directory.Build.props') -Raw
+$version = $buildProperties.Project.PropertyGroup.Version
 
 function Invoke-DotNet {
     param([string[]]$Arguments)
@@ -15,15 +18,26 @@ function Invoke-DotNet {
     }
 }
 
-# Run the shared behavior checks before producing either loader's distribution.
-Invoke-DotNet -Arguments @(
-    'run', '--project', (Join-Path $PSScriptRoot 'tests/UserspaceLaserSync.Regression/UserspaceLaserSync.Regression.csproj'),
-    '--configuration', $Configuration
-)
-
-foreach ($project in @('UserspaceLaserSync.csproj', 'RML/UserspaceLaserSync.RML.csproj')) {
+# Resolve global.json consistently, including when invoked from another directory.
+Push-Location -LiteralPath $PSScriptRoot
+try {
+    # Run the shared behavior checks before producing either loader's distribution.
     Invoke-DotNet -Arguments @(
-        'publish', (Join-Path $PSScriptRoot $project), '--configuration', $Configuration,
-        '-p:ResoniteInstallOnBuild=false'
+        'run', '--project', 'Tests/UserspaceLaserSync.Tests.csproj',
+        '--configuration', $Configuration
     )
+
+    New-Item -ItemType Directory -Path $artifactDirectory -Force | Out-Null
+    foreach ($loader in @('Bepis', 'RML')) {
+        Invoke-DotNet -Arguments @(
+            'publish', "$loader/UserspaceLaserSync.$loader.csproj", '--configuration', $Configuration,
+            '-p:ResoniteInstallOnBuild=false', '-p:ResoniteGenerateReleaseArchive=true'
+        )
+
+        $archiveName = "UserspaceLaserSync.$loader-$version-$Configuration.zip"
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "$loader/bin/publish/$archiveName") -Destination $artifactDirectory -Force
+        Get-Item -LiteralPath (Join-Path $artifactDirectory $archiveName) | Select-Object Name, Length
+    }
+} finally {
+    Pop-Location
 }

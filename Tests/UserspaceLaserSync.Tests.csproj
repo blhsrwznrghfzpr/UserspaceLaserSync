@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <ResoniteProjectType>tests</ResoniteProjectType>
+    <AssemblyName>UserspaceLaserSync.Tests</AssemblyName>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../LaserEnabledPatch.cs" Link="LaserEnabledPatch.cs" />
+    <Compile Include="../Shared/*.cs" Link="Shared/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

@@ -1,11 +1,8 @@
-<Project Sdk="Remora.Resonite.Sdk/2.3.4">
+<Project Sdk="Remora.Resonite.Sdk">
   <PropertyGroup>
-    <ResoniteTarget>client</ResoniteTarget>
-    <ResoniteProjectType>mod</ResoniteProjectType>
     <ResoniteTargetModLoader>BepisLoader</ResoniteTargetModLoader>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="RML/**/*.cs;tests/**/*.cs" />
     <ResoniteReference Include="FrooxEngine" />
     <ResoniteReference Include="Elements.Core" />
     <ResoniteReference Include="Renderite.Shared" />

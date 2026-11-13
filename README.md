@@ -48,15 +48,21 @@ RML設定の `Enabled` は既定で `true` です。ResoniteModSettingsなどか
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-共通処理の回帰チェックを実行してから、BepisLoader版とRML版を順にビルド・publishします。失敗するとそこで停止します。既定は `Release` で、両版の配布ZIPを生成します。ゲームへの自動コピーは行いません。
+共通処理の回帰チェックを実行してから、BepisLoader版とRML版を順にビルド・publishします。失敗するとそこで停止します。既定は `Release` で、両版の配布ZIPを `artifacts/` にまとめます。ゲームへの自動コピーは行いません。
 
-個別にビルドする場合は、以下のプロジェクトを指定します。ルートでの `dotnet build` はBepisLoader版だけを対象にします。
+両版とテストプロジェクトのビルドだけを行う場合は、ソリューションを指定します。このコマンドは回帰チェックの実行やZIP生成は行いません。
+
+```powershell
+dotnet build UserspaceLaserSync.slnx -c Release
+```
+
+個別にビルドする場合は、以下のプロジェクトを指定します。
 
 BepisLoader版:
 
 ```powershell
-dotnet build UserspaceLaserSync.csproj -c Release
-dotnet publish UserspaceLaserSync.csproj -c Release
+dotnet build Bepis/UserspaceLaserSync.Bepis.csproj -c Release
+dotnet publish Bepis/UserspaceLaserSync.Bepis.csproj -c Release
 ```
 
 RML版:
@@ -68,12 +74,14 @@ dotnet publish RML/UserspaceLaserSync.RML.csproj -c Release
 
 | 対象 | 配布ZIP |
 | --- | --- |
-| BepisLoader | `bin/publish/UserspaceLaserSync-<Version>-Release.zip` |
-| RML | `RML/bin/publish/UserspaceLaserSync.RML-<Version>-Release.zip` |
+| BepisLoader | `artifacts/UserspaceLaserSync.Bepis-<Version>-Release.zip` |
+| RML | `artifacts/UserspaceLaserSync.RML-<Version>-Release.zip` |
+
+上記は `build.ps1` の出力先です。個別の `dotnet publish` では各ローダーフォルダの `bin/publish/` にZIPを生成します。
 
 `<Version>` は `Directory.Build.props` の `Version` です。リリース時のバージョン変更はこの1か所で行います。両版のアセンブリ・配布ZIPに加え、BepisLoaderのプラグイン属性はSDKが生成する `PluginMetadata.VERSION`、RMLの表示バージョンはアセンブリのバージョンから取得します。
 
-BepisLoader版DLL: `bin/Release/mod/client/BepInEx/plugins/UserspaceLaserSync/UserspaceLaserSync.dll`
+BepisLoader版DLL: `Bepis/bin/Release/mod/client/BepInEx/plugins/UserspaceLaserSync/UserspaceLaserSync.dll`
 
 RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 
@@ -82,21 +90,39 @@ RML版DLL: `RML/bin/Release/mod/client/rml_mods/UserspaceLaserSync.dll`
 ## 回帰チェック
 
 ```powershell
-dotnet run --project tests/UserspaceLaserSync.Regression/UserspaceLaserSync.Regression.csproj -c Release
+dotnet run --project Tests/UserspaceLaserSync.Tests.csproj -c Release
 ```
 
-本体の `LaserEnabledPatch.cs` を直接コンパイルし、エンジン・ローダーの最小限の代替実装を使って15項目を確認します。標準ポインターのOFF/ON、左右独立、ツールの例外、Mod無効化、対象外ユーザーやワールドでの元の判定の維持などを対象とします。失敗時は非ゼロの終了コードを返します。テスト用コードは両ローダー版のDLLには含まれません。
+本体の `Shared/*.cs` を直接コンパイルし、`Tests/EngineDouble.cs` のエンジン・ローダーの最小限の代替実装を使って15項目を確認します。標準ポインターのOFF/ON、左右独立、ツールの例外、Mod無効化、対象外ユーザーやワールドでの元の判定の維持などを対象とします。失敗時は非ゼロの終了コードを返します。テスト用コードは両ローダー版のDLLには含まれません。
 
 これは判定ロジックのチェックであり、実際のHarmonyパッチ適用、Resonite APIとの実行時互換性、3DDashOnScreen併用時の動作は下記の実機確認が必要です。
 
 ## プロジェクト構成
 
-- `LaserEnabledPatch.cs`: 両ローダー版で共有するレーザー判定。
-- `Plugin.cs` / `UserspaceLaserSync.csproj`: BepisLoader用の起動・設定処理とビルド。
-- `RML/`: ResoniteModLoader用の起動・設定処理とビルド。
-- `Directory.Build.props`: バージョンと共通のビルド情報。
-- `tests/UserspaceLaserSync.Regression/`: 共通パッチの回帰チェック。
-- `build.ps1`: 回帰チェックと両版の配布物作成。
+```text
+UserspaceLaserSync/
+├─ Bepis/
+│  ├─ Plugin.cs
+│  └─ UserspaceLaserSync.Bepis.csproj
+├─ RML/
+│  ├─ Mod.cs
+│  └─ UserspaceLaserSync.RML.csproj
+├─ Shared/
+│  ├─ LaserEnabledPatch.cs
+│  └─ LaserSyncRuntime.cs
+├─ Tests/
+│  ├─ EngineDouble.cs
+│  ├─ Program.cs
+│  └─ UserspaceLaserSync.Tests.csproj
+├─ artifacts/                  # build.ps1の配布ZIP（Git管理外）
+├─ Directory.Build.props      # バージョンと共通設定
+├─ Directory.Build.targets    # 両版にShared/*.csを取り込む
+├─ global.json                # Remora SDKバージョン
+├─ UserspaceLaserSync.slnx
+└─ build.ps1
+```
+
+`Bepis/Plugin.cs` と `RML/Mod.cs` が各ローダーの起動・設定処理を担当します。`Shared/LaserSyncRuntime.cs` を通じて現在の設定を読み、共通パッチがローダーの入口クラスに依存しない構成にしています。
 
 ## 実機確認項目
 
@@ -123,4 +149,4 @@ Harmonyで `InteractionHandler.LaserEnabled` のgetterにPostfixを追加して�
 
 Resonite内部APIへの依存があるため、Resoniteの更新後には再検証が必要です。
 
-レーザー判定の実装は `LaserEnabledPatch.cs` を両プロジェクトから共有し、起動処理と設定APIのみローダー別に実装しています。
+レーザー判定の実装は `Shared/LaserEnabledPatch.cs` を両プロジェクトから共有し、起動処理と設定APIのみローダー別に実装しています。

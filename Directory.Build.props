@@ -3,6 +3,11 @@
     <Version>0.1.1</Version>
     <Authors>blhsrwznrghfzpr</Authors>
     <Description>Synchronizes userspace laser toggles with the focused world's lasers.</Description>
+    <AssemblyName>UserspaceLaserSync</AssemblyName>
+    <RootNamespace>UserspaceLaserSync</RootNamespace>
+    <ResoniteTarget>client</ResoniteTarget>
+    <ResoniteProjectType>mod</ResoniteProjectType>
+    <ResoniteInstallOnBuild>false</ResoniteInstallOnBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 </Project>

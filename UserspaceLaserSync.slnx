@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Bepis/">
+    <Project Path="Bepis/UserspaceLaserSync.Bepis.csproj" />
+  </Folder>
+  <Folder Name="/RML/">
+    <Project Path="RML/UserspaceLaserSync.RML.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/UserspaceLaserSync.Tests.csproj" />
+  </Folder>
+</Solution>

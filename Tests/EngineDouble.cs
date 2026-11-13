@@ -2,11 +2,6 @@ using Renderite.Shared;
 
 // Minimal stand-ins for the dependencies of the linked production patch.
 // These checks exercise its decisions, not Harmony installation or engine behavior.
-namespace UserspaceLaserSync
-{
-    static class Plugin { public static bool IsSyncEnabled = true; }
-}
-
 namespace Renderite.Shared
 {
     enum Chirality { Left, Right }

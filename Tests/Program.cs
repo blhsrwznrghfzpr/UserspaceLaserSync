@@ -7,6 +7,8 @@ using UserspaceLaserSync;
 // or loader is required. A failed assertion exits this executable with an error.
 var postfix = typeof(LaserEnabledPatch).GetMethod("Postfix", BindingFlags.NonPublic | BindingFlags.Static)!;
 var count = 0;
+var enabled = true;
+LaserSyncRuntime.ReadEnabled = () => enabled;
 void Check(string name, bool expected, InteractionHandler handler, bool original = true)
 {
     object[] args = [handler, original];
@@ -48,10 +50,10 @@ Check("no tool follows OFF", false, pointer);
 pointer.ActiveTool = new UserspacePointer();
 left.ActiveTool = new LaserTool();
 Check("world tool does not override raw toggle", false, pointer);
-Plugin.IsSyncEnabled = false;
+enabled = false;
 Check("disabled mod preserves true", true, pointer);
 Check("disabled mod preserves false", false, pointer, false);
-Plugin.IsSyncEnabled = true;
+enabled = true;
 Check("normal world untouched", true, left);
 pointer.IsUnderLocalUser = false;
 Check("remote user untouched", true, pointer);

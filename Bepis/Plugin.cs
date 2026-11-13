@@ -14,12 +14,12 @@ public sealed class Plugin : BasePlugin
 
     private Harmony? _harmony;
     private static ConfigEntry<bool>? SyncEnabled { get; set; }
-    internal static bool IsSyncEnabled => SyncEnabled?.Value == true;
 
     public override void Load()
     {
         SyncEnabled = Config.Bind("General", "Enabled", true,
             "Make each userspace laser follow the same hand's laser toggle in the focused world.");
+        LaserSyncRuntime.ReadEnabled = () => SyncEnabled?.Value == true;
         _harmony = new Harmony(PluginGuid);
         try
         {
@@ -28,6 +28,8 @@ public sealed class Plugin : BasePlugin
         catch
         {
             _harmony.UnpatchSelf();
+            LaserSyncRuntime.ReadEnabled = null;
+            SyncEnabled = null;
             throw;
         }
         Log.LogInfo("UserspaceLaserSync loaded. Userspace lasers follow the focused world's laser toggles.");
@@ -37,6 +39,7 @@ public sealed class Plugin : BasePlugin
     {
         _harmony?.UnpatchSelf();
         SyncEnabled = null;
+        LaserSyncRuntime.ReadEnabled = null;
         return true;
     }
 }

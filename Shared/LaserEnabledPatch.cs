@@ -16,7 +16,7 @@ internal static class LaserEnabledPatch
     [HarmonyPostfix]
     private static void Postfix(InteractionHandler __instance, ref bool __result)
     {
-        if (!Plugin.IsSyncEnabled || __instance.IsRemoved ||
+        if (!LaserSyncRuntime.IsSyncEnabled || __instance.IsRemoved ||
             !__instance.IsUnderLocalUser || __instance.World != Userspace.UserspaceWorld)
             return;
 

@@ -1,19 +1,14 @@
 <Project>
-  <Import Project="Sdk.props" Sdk="Remora.Resonite.Sdk" Version="2.3.4" />
+  <Import Project="Sdk.props" Sdk="Remora.Resonite.Sdk" />
   <PropertyGroup>
-    <ResoniteTarget>client</ResoniteTarget>
-    <ResoniteProjectType>mod</ResoniteProjectType>
     <ResoniteTargetModLoader>ResoniteModLoaderStandalone</ResoniteTargetModLoader>
-    <AssemblyName>UserspaceLaserSync</AssemblyName>
-    <RootNamespace>UserspaceLaserSync</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../LaserEnabledPatch.cs" Link="LaserEnabledPatch.cs" />
     <ResoniteReference Include="FrooxEngine" />
     <ResoniteReference Include="Elements.Core" />
     <ResoniteReference Include="Renderite.Shared" />
   </ItemGroup>
-  <Import Project="Sdk.targets" Sdk="Remora.Resonite.Sdk" Version="2.3.4" />
+  <Import Project="Sdk.targets" Sdk="Remora.Resonite.Sdk" />
   <!-- The installed loader supplies RML and Harmony. Do not distribute copies. -->
   <ItemGroup>
     <PackageReference Update="ResoniteModLoader" ExcludeAssets="runtime" />
