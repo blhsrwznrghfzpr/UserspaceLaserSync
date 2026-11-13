@@ -1,0 +1,21 @@
+# Used by publish.ps1 with --file; not a standalone tcli build configuration.
+# Values in {{...}} come from package.json and Directory.Build.props.
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "{{team}}"
+name = "{{name}}"
+versionNumber = "{{version}}"
+containsNsfwContent = false
+
+[build]
+outdir = "."
+copy = []
+
+[publish]
+repository = "https://thunderstore.io"
+communities = ["{{community}}"]
+
+[publish.categories]
+{{community}} = [{{categories}}]

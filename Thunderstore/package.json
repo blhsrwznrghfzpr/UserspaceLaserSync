@@ -1,7 +1,7 @@
 {
   "team": "blhsrwznrghfzpr",
   "community": "resonite",
-  "categories": ["Mods", "Controls", "Dashboard", "AI Generated"],
+  "categories": ["mods", "controls", "dashboard", "ai-generated"],
   "name": "UserspaceLaserSync",
   "website_url": "https://github.com/blhsrwznrghfzpr/UserspaceLaserSync",
   "description": "Sync userspace dashboard and facet lasers with each hand's laser toggle in the focused world. Disable Enabled to restore standard behavior.",
