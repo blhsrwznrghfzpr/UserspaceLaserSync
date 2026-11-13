@@ -58,7 +58,7 @@ Thunderstoreにログインし、**Settings → Teams → blhsrwznrghfzpr → Se
 
 ### 2. リリース情報を更新
 
-Thunderstoreへの初回公開で `1.0.0` が未使用なら、現在のバージョンで公開できます。更新の場合は `Directory.Build.props` の `Version` を上げ、`CHANGELOG.md` に `## <Version>` の見出しと変更内容を追加します。必要に応じて `Thunderstore/README.md` と `Thunderstore/package.json` も更新します。
+Thunderstoreへの初回公開では、`Directory.Build.props` の現在のバージョンが未使用なら、そのまま公開できます。更新の場合は `Version` を上げ、`CHANGELOG.md` に `## <Version>` の見出しと変更内容を追加します。必要に応じて `Thunderstore/README.md` と `Thunderstore/package.json` も更新します。
 
 GitHub ReleasesとThunderstoreの公開状況は別管理です。Thunderstoreで同じバージョンを公開済みなら上書きできません。更新時もTeamとMod名は維持します。
 

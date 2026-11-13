@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- Add a dedicated Thunderstore package with loader dependencies, documentation, and the Resonite plugin directory layout.
+- Share package metadata between Thunderstore and Gale and validate release inputs before packaging.
+- Add a publishing script with dry-run support and a separate Thunderstore release guide.
+- No changes to laser synchronization or Enabled behavior.
+
 ## 1.0.0
 
 - Initial release for BepisLoader and ResoniteModLoader.
