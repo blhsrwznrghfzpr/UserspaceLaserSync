@@ -19,6 +19,7 @@ public sealed class Mod : ResoniteMod
     public override string Name => "UserspaceLaserSync";
     public override string Author => "blhsrwznrghfzpr";
     public override string Version => typeof(Mod).Assembly.GetName().Version!.ToString(3);
+    public override string Link => "https://github.com/blhsrwznrghfzpr/UserspaceLaserSync";
 
     public override void OnEngineInit()
     {
